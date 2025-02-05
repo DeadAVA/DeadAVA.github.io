@@ -11,12 +11,6 @@
       // Umbral de distancia (en metros) para definir "cercana" o "lejana"
       const DISTANCE_THRESHOLD = 500;
 
-      // Función para obtener parámetros de la URL
-      function getParameter(name) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(name);
-      }
-
       // Función para calcular la distancia entre dos puntos (fórmula de Haversine)
       function calculateDistance(lat1, lon1, lat2, lon2) {
         const R = 6371; // Radio de la Tierra en km
@@ -93,7 +87,6 @@
         }
       }
 
-
       // Función para recalcular la distancia de la ubicación actual a la ruta actual
       function updateDistanceForCurrentRoute() {
         if (currentRouteData && userLocation) {
@@ -107,10 +100,14 @@
             const proximity = d.meters <= DISTANCE_THRESHOLD ? "Cercana" : "Lejana";
     
             // Enviar a App Inventor como texto plano separado por "|"
-            window.parent.postMessage(`Ruta: ${currentRouteData.routeId} | Distancia: ${distanceText} | Estado: ${proximity}`, "*");
+            const infoParaEnviar = `Ruta: ${currentRouteData.routeId} | Distancia: ${distanceText} | Estado: ${proximity}`;
+            if (typeof AppInventor !== "undefined") {
+                AppInventor.setWebViewString(infoParaEnviar);
+            } else {
+                console.log("AppInventor no está definido. Información para enviar:", infoParaEnviar);
+            }
         }
-    }
-    
+      }
 
       // Función para inicializar el mapa, dibujar rutas y comunicar información a App Inventor
       function initMap() {
@@ -145,53 +142,39 @@
           }
         ];
 
-        // Se verifica si se envía un routeId en la URL
-        const paramRouteId = getParameter("routeId");
+        // Se calcula la distancia desde la ubicación del usuario hasta el origen de cada ruta
+        const distances = routes.map(route => {
+          const d = calculateDistance(userLocation.lat, userLocation.lng, route.origin.lat, route.origin.lng);
+          return {
+            routeId: route.routeId,
+            distance: d.meters,
+            text: (d.km < 1 ? Math.round(d.meters) + " metros" : d.km.toFixed(2) + " km")
+          };
+        });
 
-        if (paramRouteId) {
-          // Se dibuja la ruta indicada por la URL
-          const selectedRoute = routes.find(r => r.routeId === paramRouteId);
-          if (selectedRoute) {
-            drawRoute(selectedRoute);
-          } else {
-            console.error("No se encontró la ruta con routeId =", paramRouteId);
+        // Se determina cuál es la ruta más cercana y cuál la más lejana
+        let nearest = distances[0], farthest = distances[0];
+        distances.forEach(item => {
+          if (item.distance < nearest.distance) {
+            nearest = item;
           }
+          if (item.distance > farthest.distance) {
+            farthest = item;
+          }
+        });
+
+        // Se envía la información a App Inventor
+        const infoParaEnviar = `Ruta más cercana: ${nearest.routeId} (${nearest.text}) | Ruta más lejana: ${farthest.routeId} (${farthest.text})`;
+        if (typeof AppInventor !== "undefined") {
+            AppInventor.setWebViewString(infoParaEnviar);
         } else {
-          // Si no se indica routeId, se calculan las distancias para ambas rutas
+            console.log("AppInventor no está definido. Información para enviar:", infoParaEnviar);
+        }
 
-          // Se calcula la distancia desde la ubicación del usuario hasta el origen de cada ruta
-          const distances = routes.map(route => {
-            const d = calculateDistance(userLocation.lat, userLocation.lng, route.origin.lat, route.origin.lng);
-            return {
-              routeId: route.routeId,
-              distance: d.meters,
-              text: (d.km < 1 ? Math.round(d.meters) + " metros" : d.km.toFixed(2) + " km")
-            };
-          });
-
-          // Se determina cuál es la ruta más cercana y cuál la más lejana
-          let nearest = distances[0], farthest = distances[0];
-          distances.forEach(item => {
-            if (item.distance < nearest.distance) {
-              nearest = item;
-            }
-            if (item.distance > farthest.distance) {
-              farthest = item;
-            }
-          });
-
-          // Se envía la información a App Inventor
-          window.parent.postMessage({
-            distances: distances,
-            nearest: nearest,
-            farthest: farthest
-          }, "*");
-
-          // Opcional: dibuja en el mapa la ruta más cercana (puedes cambiar este comportamiento)
-          const nearestRoute = routes.find(r => r.routeId === nearest.routeId);
-          if (nearestRoute) {
-            drawRoute(nearestRoute);
-          }
+        // Opcional: dibuja en el mapa la ruta más cercana
+        const nearestRoute = routes.find(r => r.routeId === nearest.routeId);
+        if (nearestRoute) {
+          drawRoute(nearestRoute);
         }
       }
 
@@ -230,10 +213,12 @@
               const proximity = d.meters <= DISTANCE_THRESHOLD ? "cercana" : "lejana";
 
               // Se envía la información a App Inventor
-              // Concatena los valores usando ";" como separador
-              var infoParaEnviar = routeData.routeId + ";" + distanceText + ";" + proximity;
-              AppInventor.setWebViewString(infoParaEnviar);
-           
+              const infoParaEnviar = `Ruta: ${routeData.routeId} | Distancia: ${distanceText} | Estado: ${proximity}`;
+              if (typeof AppInventor !== "undefined") {
+                  AppInventor.setWebViewString(infoParaEnviar);
+              } else {
+                  console.log("AppInventor no está definido. Información para enviar:", infoParaEnviar);
+              }
             }
           } else {
             console.error("Error al trazar la ruta:", status);
