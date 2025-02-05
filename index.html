@@ -10,6 +10,9 @@
       // Umbral de distancia (en metros) para definir "cercana" o "lejana"
       const DISTANCE_THRESHOLD = 500;
 
+      // Colores para las rutas
+      const routeColors = ["#FF0000", "#00FF00", "#0000FF", "#FF00FF", "#00FFFF"]; // Rojo, Verde, Azul, Magenta, Cian
+
       // Función para obtener parámetros de la URL
       function getParameter(name) {
         const urlParams = new URLSearchParams(window.location.search);
@@ -159,12 +162,16 @@
           // Se dibuja la ruta indicada por la URL
           const selectedRoute = routes.find(r => r.routeId === paramRouteId);
           if (selectedRoute) {
-            drawRoute(selectedRoute);
+            drawRoute(selectedRoute, routeColors[0]); // Usar el primer color para la ruta específica
           } else {
             console.error("No se encontró la ruta con routeId =", paramRouteId);
           }
         } else {
-          // Si no se indica routeId, se calculan las distancias para ambas rutas
+          // Si no se indica routeId, se dibujan todas las rutas con colores diferentes
+          routes.forEach((route, index) => {
+            const color = routeColors[index % routeColors.length]; // Asignar un color único a cada ruta
+            drawRoute(route, color);
+          });
 
           // Se calcula la distancia desde la ubicación del usuario hasta el origen de cada ruta
           const distances = routes.map(route => {
@@ -194,20 +201,14 @@
           } else {
               console.log("AppInventor no está definido. Información para enviar:", infoParaEnviar);
           }
-
-          // Opcional: dibuja en el mapa la ruta más cercana
-          const nearestRoute = routes.find(r => r.routeId === nearest.routeId);
-          if (nearestRoute) {
-            drawRoute(nearestRoute);
-          }
         }
       }
 
       // Función para dibujar una ruta en el mapa utilizando DirectionsService y DirectionsRenderer
-      function drawRoute(routeData) {
+      function drawRoute(routeData, color) {
         const directionsService = new google.maps.DirectionsService();
         const directionsRenderer = new google.maps.DirectionsRenderer({
-          polylineOptions: { strokeColor: "#FF0000", strokeWeight: 5 }
+          polylineOptions: { strokeColor: color, strokeWeight: 5 } // Usar el color proporcionado
         });
         directionsRenderer.setMap(map);
 
