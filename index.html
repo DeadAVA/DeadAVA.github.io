@@ -1,21 +1,22 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Rutas de Transporte</title>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCqfzq_SSagdWTP0-nLG4jDM7k4brgcM_Y&callback=initMap" async defer></script>
-  <!DOCTYPE html>
-  <html>
   <head>
+    <title>Rutas de Transporte</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCqfzq_SSagdWTP0-nLG4jDM7k4brgcM_Y&callback=initMap" async defer></script>
     <script>
       let map;
       let userLocation;
-  
+      // Variable global para guardar la ruta actualmente dibujada
+      let currentRouteData = null;
+      // Umbral de distancia (en metros) para definir "cercana" o "lejana"
+      const DISTANCE_THRESHOLD = 500;
+
       // Función para obtener parámetros de la URL
       function getParameter(name) {
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get(name);
       }
-  
+
       // Función para calcular la distancia entre dos puntos (fórmula de Haversine)
       function calculateDistance(lat1, lon1, lat2, lon2) {
         const R = 6371; // Radio de la Tierra en km
@@ -29,15 +30,33 @@
         const distanceKm = R * c;
         return { km: distanceKm, meters: distanceKm * 1000 };
       }
-  
-      // Listener para recibir mensajes desde App Inventor (si deseas comunicación bidireccional)
+
+      // Escuchar mensajes desde App Inventor
       window.addEventListener("message", function(event) {
         console.log("Mensaje recibido desde App Inventor:", event.data);
-        // Aquí puedes procesar comandos entrantes, por ejemplo:
-        // if(event.data.command === "cambiarRuta" && event.data.routeId){ ... }
+        // Si se recibe el comando "localizame"
+        if (event.data && event.data.command === "localizame") {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                userLocation = {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude
+                };
+                // Una vez actualizada la ubicación, se recalcula la distancia
+                updateDistanceForCurrentRoute();
+              },
+              (error) => {
+                console.error("Error al obtener la ubicación:", error);
+              }
+            );
+          } else {
+            console.error("Geolocalización no soportada en este navegador.");
+          }
+        }
       });
-  
-      // Función para obtener la ubicación del usuario
+
+      // Función para obtener la ubicación del usuario al cargar la página
       function getUserLocation() {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
@@ -50,7 +69,7 @@
             },
             (error) => {
               console.error("Error al obtener la ubicación:", error);
-              // En caso de error, se usa una ubicación predeterminada
+              // Ubicación predeterminada en caso de error
               userLocation = { lat: 31.8687503, lng: -116.6238947 };
               initMap();
             }
@@ -61,15 +80,38 @@
           initMap();
         }
       }
-  
-      // Función para inicializar el mapa, dibujar rutas y comunicar la información a App Inventor
+
+      // Función para recalcular la distancia de la ubicación actual a la ruta actual
+      function updateDistanceForCurrentRoute() {
+        if (currentRouteData && userLocation) {
+          // Se calcula la distancia usando el origen de la ruta
+          const d = calculateDistance(
+            userLocation.lat, 
+            userLocation.lng, 
+            currentRouteData.origin.lat, 
+            currentRouteData.origin.lng
+          );
+          const distanceText = (d.km < 1 ? Math.round(d.meters) + " metros" : d.km.toFixed(2) + " km");
+          // Determinar si la ruta está "cercana" o "lejana" según el umbral
+          const proximity = d.meters <= DISTANCE_THRESHOLD ? "cercana" : "lejana";
+
+          // Se envía la información a App Inventor
+          window.parent.postMessage({
+            selectedRoute: currentRouteData.routeId,
+            distanceToStart: distanceText,
+            proximity: proximity
+          }, "*");
+        }
+      }
+
+      // Función para inicializar el mapa, dibujar rutas y comunicar información a App Inventor
       function initMap() {
         // Inicializa el mapa centrado en la ubicación del usuario
         map = new google.maps.Map(document.getElementById("map"), {
           zoom: 12,
           center: userLocation
         });
-  
+
         // Definición de las dos rutas
         const routes = [
           {
@@ -94,10 +136,10 @@
             ]
           }
         ];
-  
-        // Verifica si se envía un routeId en la URL
+
+        // Se verifica si se envía un routeId en la URL
         const paramRouteId = getParameter("routeId");
-  
+
         if (paramRouteId) {
           // Se dibuja la ruta indicada por la URL
           const selectedRoute = routes.find(r => r.routeId === paramRouteId);
@@ -108,7 +150,7 @@
           }
         } else {
           // Si no se indica routeId, se calculan las distancias para ambas rutas
-  
+
           // Se calcula la distancia desde la ubicación del usuario hasta el origen de cada ruta
           const distances = routes.map(route => {
             const d = calculateDistance(userLocation.lat, userLocation.lng, route.origin.lat, route.origin.lng);
@@ -118,7 +160,7 @@
               text: (d.km < 1 ? Math.round(d.meters) + " metros" : d.km.toFixed(2) + " km")
             };
           });
-  
+
           // Se determina cuál es la ruta más cercana y cuál la más lejana
           let nearest = distances[0], farthest = distances[0];
           distances.forEach(item => {
@@ -129,14 +171,14 @@
               farthest = item;
             }
           });
-  
+
           // Se envía la información a App Inventor
           window.parent.postMessage({
             distances: distances,
             nearest: nearest,
             farthest: farthest
           }, "*");
-  
+
           // Opcional: dibuja en el mapa la ruta más cercana (puedes cambiar este comportamiento)
           const nearestRoute = routes.find(r => r.routeId === nearest.routeId);
           if (nearestRoute) {
@@ -144,7 +186,7 @@
           }
         }
       }
-  
+
       // Función para dibujar una ruta en el mapa utilizando DirectionsService y DirectionsRenderer
       function drawRoute(routeData) {
         const directionsService = new google.maps.DirectionsService();
@@ -152,27 +194,38 @@
           polylineOptions: { strokeColor: "#FF0000", strokeWeight: 5 }
         });
         directionsRenderer.setMap(map);
-  
+
         const request = {
           origin: routeData.origin,
           destination: routeData.destination,
           waypoints: routeData.waypoints,
           travelMode: "DRIVING"
         };
-  
+
         directionsService.route(request, (result, status) => {
           if (status === "OK") {
             directionsRenderer.setDirections(result);
-  
-            // Calcula la distancia desde la ubicación del usuario hasta el inicio de la ruta y la envía a App Inventor
+            // Guarda la ruta actual para poder recalcular la distancia luego
+            currentRouteData = routeData;
+
+            // Calcula la distancia desde la ubicación del usuario hasta el inicio de la ruta
             if (userLocation) {
               const routeStart = result.routes[0].legs[0].start_location;
-              const d = calculateDistance(userLocation.lat, userLocation.lng, routeStart.lat(), routeStart.lng());
+              const d = calculateDistance(
+                userLocation.lat, 
+                userLocation.lng, 
+                routeStart.lat(), 
+                routeStart.lng()
+              );
               const distanceText = (d.km < 1 ? Math.round(d.meters) + " metros" : d.km.toFixed(2) + " km");
-  
+              // Determina si la ruta está "cercana" o "lejana"
+              const proximity = d.meters <= DISTANCE_THRESHOLD ? "cercana" : "lejana";
+
+              // Se envía la información a App Inventor
               window.parent.postMessage({
                 selectedRoute: routeData.routeId,
-                distanceToStart: distanceText
+                distanceToStart: distanceText,
+                proximity: proximity
               }, "*");
             }
           } else {
@@ -180,13 +233,12 @@
           }
         });
       }
-  
-      // Iniciar la obtención de la ubicación al cargar la página
+
+      // Inicia la obtención de la ubicación al cargar la página
       window.onload = getUserLocation;
     </script>
   </head>
   <body>
     <div id="map" style="height: 100vh; width: 100%;"></div>
   </body>
-  </html>
-  
+</html>
