@@ -174,19 +174,19 @@
       // Inicializar el mapa al cargar la página
       window.onload = () => {
         initMap();
-       // if (navigator.geolocation) {
-       //   navigator.geolocation.watchPosition(
-       //     (position) => {
-       //       actualizarUbicacion({
-       //         lat: position.coords.latitude,
-       //         lng: position.coords.longitude
-       //       });
-       //     },
-       //     (error) => {
-       //       console.error("Error al obtener la ubicación:", error);
-       //     }
-       //   );
-       // }
+        if (navigator.geolocation) {
+          navigator.geolocation.watchPosition(
+            (position) => {
+              actualizarUbicacion({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              });
+            },
+            (error) => {
+              console.error("Error al obtener la ubicación:", error);
+            }
+          );
+        }
         
       };
     </script>
