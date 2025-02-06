@@ -38,7 +38,6 @@
         userLocation = pos;
         if (map) {
           if (!userMarker) {
-            // Si el marcador no existe, lo crea
             userMarker = new google.maps.Marker({
               position: userLocation,
               map: map,
@@ -49,15 +48,13 @@
               }
             });
           } else {
-            // Si ya existe, se actualiza su posición
             userMarker.setPosition(userLocation);
           }
-          // Centrar el mapa en la nueva ubicación
           map.setCenter(userLocation);
-          // Actualizar la distancia con la ruta, en caso de que se esté usando
           updateDistanceForCurrentRoute();
         }
       }
+      
 
       // Función para recalcular la distancia del usuario al waypoint más cercano
       function updateDistanceForCurrentRoute() {
