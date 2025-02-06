@@ -79,7 +79,7 @@
               : (minDistance / 1000).toFixed(2) + " km");
             const proximity = (minDistance <= DISTANCE_THRESHOLD ? "Cercana" : "Lejana");
             // Enviar datos a App Inventor (si está definido)
-            const infoParaEnviar = `Ruta: ${currentRouteData.routeId} | Waypoint más cercano: (${nearestWaypoint.location.lat}, ${nearestWaypoint.location.lng}) | Distancia: ${distanceText} | Estado: ${proximity}`;
+            const infoParaEnviar = `Ruta: ${currentRouteData.routeId}| Estado: ${proximity}`;
             if (typeof AppInventor !== "undefined") {
               AppInventor.setWebViewString(infoParaEnviar);
             } else {
@@ -175,7 +175,7 @@
       window.onload = () => {
         initMap();
         if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
+          navigator.geolocation.watchPosition(
             (position) => {
               actualizarUbicacion({
                 lat: position.coords.latitude,
