@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -62,7 +63,6 @@
           if (currentRouteData && userLocation) {
               let nearestWaypoint = null;
               let minDistance = Infinity;
-    
               currentRouteData.waypoints.forEach((waypoint) => {
                   const d = calculateDistance(
                       userLocation.lat,
@@ -75,22 +75,15 @@
                       nearestWaypoint = waypoint;
                   }
               });
-    
+      
               if (nearestWaypoint) {
-                  // Generar una distancia simulada en un rango arbitrario
-                  let simulatedDistance = Math.random() * (5000 - 50) + 50; // Entre 50m y 5km
-                  
-                  // Determinar aleatoriamente si es cercana o lejana
-                  let proximity = Math.random() > 0.5 ? "Cercana" : "Lejana";
-    
-                  // Formatear la distancia para mostrarla
-                  const distanceText = (simulatedDistance <= 1000
-                      ? Math.round(simulatedDistance) + " metros"
-                      : (simulatedDistance / 1000).toFixed(2) + " km");
-                  
+                  const distanceText = (minDistance <= 1000
+                      ? Math.round(minDistance) + " metros"
+                      : (minDistance / 1000).toFixed(2) + " km");
+                  const proximity = (minDistance <= DISTANCE_THRESHOLD ? "Cercana" : "Lejana");
                   const estimatedTime = horario();
-                  const infoParaEnviar = `Ruta: ${currentRouteData.routeId} | Estado: ${proximity} | Tiempo estimado: ${estimatedTime}`;
-    
+                  const infoParaEnviar = Ruta: ${currentRouteData.routeId} | Estado: ${proximity} | Tiempo estimado: ${estimatedTime};
+      
                   if (typeof AppInventor !== "undefined" && infoParaEnviar !== lastSentInfo) {
                       AppInventor.setWebViewString(infoParaEnviar);
                       lastSentInfo = infoParaEnviar;
@@ -165,9 +158,9 @@
         if (minutos >= 60) {
             let horas = Math.floor(minutos / 60);
             let mins = minutos % 60;
-            return mins === 0 ? `${horas} h` : `${horas} h ${mins} min`;
+            return mins === 0 ? ${horas} h : ${horas} h ${mins} min;
         } else {
-            return `${minutos} min`;
+            return ${minutos} min;
         }
       }
     
@@ -234,5 +227,3 @@ function clearRoutes() {
   <!-- Reemplaza "YOUR_API_KEY" por tu clave real de Google Maps -->
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCqfzq_SSagdWTP0-nLG4jDM7k4brgcM_Y&callback=initMap"></script>
 </html>
-
-
