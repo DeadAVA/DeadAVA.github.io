@@ -61,12 +61,14 @@
                       ? Math.round(minDistance) + " metros"
                       : (minDistance / 1000).toFixed(2) + " km");
                   
+
                   // Aquí se decide aleatoriamente si es "Cercana" o "Lejana"
                   const proximity = Math.random() > 0.5 ? "Cercana" : "Lejana";
                   const estimatedTime = horario();
                   
+
                   // Se arma el mensaje a enviar (puedes incluir distanceText si lo deseas)
-                  const infoParaEnviar = Ruta: ${currentRouteData.routeId} | Estado: ${proximity} | Tiempo estimado: ${estimatedTime};
+                  const infoParaEnviar = `Ruta: ${currentRouteData.routeId} | Estado: ${proximity} | Tiempo estimado: ${estimatedTime}`;
       
                   if (typeof AppInventor !== "undefined" && infoParaEnviar !== lastSentInfo) {
                       AppInventor.setWebViewString(infoParaEnviar);
@@ -76,6 +78,7 @@
           }
       }
 
+      // Función para inicializar el mapa
       function initMap() {
         const mapDiv = document.getElementById("map");
         if (!mapDiv) {
@@ -144,9 +147,9 @@
         if (minutos >= 60) {
             let horas = Math.floor(minutos / 60);
             let mins = minutos % 60;
-            return mins === 0 ? ${horas} h : ${horas} h ${mins} min;
+            return mins === 0 ? `${horas} h` : `${horas} h ${mins} min`;
         } else {
-            return ${minutos} min;
+            return `${minutos} min`;
         }
       }
 
@@ -179,7 +182,6 @@
           activeRoutes.forEach(renderer => renderer.setMap(null));
           activeRoutes = [];
       }
-
 
       // Aseguramos que initMap esté disponible globalmente (para el callback de Google Maps)
       window.initMap = initMap;
