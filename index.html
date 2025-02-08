@@ -120,24 +120,25 @@
         // Verificar si se pasa un parámetro "routeId" en la URL para dibujar una ruta en particular
         const paramRouteId = getParameter("routeId");
         if (paramRouteId) {
-          const selectedRoute = routes.find(r => r.routeId === paramRouteId);
-          if (selectedRoute) {
-            currentRouteData = selectedRoute;
-            drawRoute(selectedRoute, routeColors[0]);
-          } else {
-            console.error("No se encontró la ruta con routeId =", paramRouteId);
-          }
+            const selectedRoute = routes.find(r => r.routeId === paramRouteId);
+            if (selectedRoute) {
+                currentRouteData = selectedRoute;
+                drawRoute(selectedRoute, routeColors[0]);
+            } else {
+                console.error("No se encontró la ruta con routeId =", paramRouteId);
+            }
         } else {
-          // Si no se especifica un parámetro, asignamos la primera ruta para tener una de referencia
-          currentRouteData = routes[0];
-          routes.forEach((route, index) => {
-            const color = routeColors[index % routeColors.length];
-            drawRoute(route, color);
-          });
+            // Si no hay routeId en la URL, asignamos la primera ruta y la dibujamos
+            currentRouteData = routes[0];
+            routes.forEach((route, index) => {
+                const color = routeColors[index % routeColors.length];
+                drawRoute(route, color);
+            });
+        
+            // ⚠️ Agregar esta línea para enviar la info a App Inventor al cargar sin ruta
+            updateDistanceForCurrentRoute();
         }
-        // Actualizamos la información de la ruta **una sola vez** al cargar la ruta
-        updateDistanceForCurrentRoute();
-      }
+
 
       // Función para generar un tiempo estimado aleatorio en múltiplos de 5 minutos
       function horario() {
