@@ -87,13 +87,13 @@
             const proximity = (minDistance <= DISTANCE_THRESHOLD ? "Cercana" : "Lejana");
             const estimatedTime = horario();
             // Enviar datos a App Inventor (si está definido)
-            const infoParaEnviar = `Ruta: ${currentRouteData.routeId} | Distancia: ${distanceText} | Estado: ${proximity} | Tiempo estimado: ${estimatedTime}`;
+            const infoParaEnviar = `Ruta: ${currentRouteData.routeId} | Estado: ${proximity} | Tiempo estimado: ${estimatedTime}`;
             if (typeof AppInventor !== "undefined") {
               AppInventor.setWebViewString(infoParaEnviar);
             } else {
                 console.log("AppInventor no está definido.");
                 console.log("Principal:", infoParaEnviar);
-                console.log("Tiempo estimado:", estimatedTime);
+              //  console.log("Tiempo estimado:", estimatedTime);
             }
           }
         }
