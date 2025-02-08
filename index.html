@@ -33,7 +33,6 @@
       // Función que será llamada desde App Inventor (usando LocationSensor)
       // con un objeto pos: {lat: <valor>, lng: <valor>}
       // ------------------------------------------------------------------
-      let firstUpdate = true; // Variable para controlar la primera actualización
 
       // Variable para evitar envíos duplicados
       let lastSentInfo = "";
@@ -77,14 +76,13 @@
           }
       }
 
-      // Función para inicializar el mapa y dibujar las rutas (si las hay)
       function initMap() {
         const mapDiv = document.getElementById("map");
         if (!mapDiv) {
           console.error("No se encontró el div con ID 'map'");
           return;
         }
-        // Si aún no se tiene una ubicación, se usa una por defecto
+        // Si no se tiene una ubicación, se usa una por defecto
         if (!userLocation) {
           userLocation = { lat: 31.8687503, lng: -116.6238947 };
         }
@@ -129,12 +127,15 @@
             console.error("No se encontró la ruta con routeId =", paramRouteId);
           }
         } else {
-          // Dibujar todas las rutas (si no se especifica un parámetro)
+          // Si no se especifica un parámetro, asignamos la primera ruta para tener una de referencia
+          currentRouteData = routes[0];
           routes.forEach((route, index) => {
             const color = routeColors[index % routeColors.length];
             drawRoute(route, color);
           });
         }
+        // Actualizamos la información de la ruta **una sola vez** al cargar la ruta
+        updateDistanceForCurrentRoute();
       }
 
       // Función para generar un tiempo estimado aleatorio en múltiplos de 5 minutos
@@ -180,11 +181,10 @@
       }
 
       // Inicializar el mapa al cargar la página
-        window.onload = () => {
-            initMap();
-          
-        };
-
+      window.onload = () => {
+        initMap();
+       
+      };
 
       // Aseguramos que initMap esté disponible globalmente (para el callback de Google Maps)
       window.initMap = initMap;
