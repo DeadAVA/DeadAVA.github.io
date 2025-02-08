@@ -100,14 +100,13 @@
           }
       }
 
-      // Función para inicializar el mapa y dibujar las rutas (si las hay)
       function initMap() {
         const mapDiv = document.getElementById("map");
         if (!mapDiv) {
           console.error("No se encontró el div con ID 'map'");
           return;
         }
-        // Si no hay ubicación, se usa una predeterminada
+        // Si aún no se tiene una ubicación, se usa una por defecto
         if (!userLocation) {
           userLocation = { lat: 31.8687503, lng: -116.6238947 };
         }
@@ -116,7 +115,7 @@
           center: userLocation
         });
 
-        // Ejemplo de definición de rutas
+        // Ejemplo de definición de rutas (opcional)
         const routes = [
           {
             routeId: "1",
@@ -141,7 +140,7 @@
           }
         ];
 
-        // Verificar si se pasa un parámetro "routeId" en la URL
+        // Verificar si se pasa un parámetro "routeId" en la URL para dibujar una ruta en particular
         const paramRouteId = getParameter("routeId");
         if (paramRouteId) {
           const selectedRoute = routes.find(r => r.routeId === paramRouteId);
@@ -152,7 +151,7 @@
             console.error("No se encontró la ruta con routeId =", paramRouteId);
           }
         } else {
-          // Dibujar todas las rutas si no se especifica un parámetro
+          // Dibujar todas las rutas (si no se especifica un parámetro)
           routes.forEach((route, index) => {
             const color = routeColors[index % routeColors.length];
             drawRoute(route, color);
