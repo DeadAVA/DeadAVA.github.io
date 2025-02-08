@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
   <head>
@@ -8,6 +7,7 @@
       let userLocation; // Se actualizará con la ubicación actual
       let userMarker;   // Marcador para la ubicación del usuario
       let currentRouteData = null;
+      // Nota: La constante DISTANCE_THRESHOLD ya no se usa, pero se mantiene para referencia.
       const DISTANCE_THRESHOLD = 500; // Umbral de distancia en metros
       const routeColors = ["#FF0000", "#00FF00", "#0000FF", "#FF00FF", "#00FFFF"];
 
@@ -35,7 +35,7 @@
       // Función que será llamada desde App Inventor (usando LocationSensor)
       // con un objeto pos: {lat: <valor>, lng: <valor>}
       // ------------------------------------------------------------------
-      let lastLocationUpdate = Date.now(); // Variable para controlar el intervalo de actualizaciones
+      let lastLocationUpdate = Date.now();
 
       function actualizarUbicacion(pos) {
           if (!userLocation || (userLocation.lat !== pos.lat || userLocation.lng !== pos.lng)) {
@@ -57,8 +57,11 @@
               updateDistanceForCurrentRoute();
           }
       }
-      // Función para recalcular la distancia del usuario al waypoint más cercano
+
+      // Variable para evitar envíos duplicados
       let lastSentInfo = "";
+
+      // Función para recalcular la distancia al waypoint más cercano y enviar la información a App Inventor
       function updateDistanceForCurrentRoute() {
           if (currentRouteData && userLocation) {
               let nearestWaypoint = null;
@@ -77,12 +80,17 @@
               });
       
               if (nearestWaypoint) {
+                  // Se mantiene el cálculo de la distancia real para mostrarla (opcional)
                   const distanceText = (minDistance <= 1000
                       ? Math.round(minDistance) + " metros"
                       : (minDistance / 1000).toFixed(2) + " km");
-                  const proximity = (minDistance <= DISTANCE_THRESHOLD ? "Cercana" : "Lejana");
+                  
+                  // Aquí se decide aleatoriamente si es "Cercana" o "Lejana"
+                  const proximity = Math.random() > 0.5 ? "Cercana" : "Lejana";
                   const estimatedTime = horario();
-                  const infoParaEnviar = Ruta: ${currentRouteData.routeId} | Estado: ${proximity} | Tiempo estimado: ${estimatedTime};
+                  
+                  // Se arma el mensaje a enviar (puedes incluir distanceText si lo deseas)
+                  const infoParaEnviar = `Ruta: ${currentRouteData.routeId} | Estado: ${proximity} | Tiempo estimado: ${estimatedTime}`;
       
                   if (typeof AppInventor !== "undefined" && infoParaEnviar !== lastSentInfo) {
                       AppInventor.setWebViewString(infoParaEnviar);
@@ -99,7 +107,7 @@
           console.error("No se encontró el div con ID 'map'");
           return;
         }
-        // Si aún no se tiene una ubicación, se usa una por defecto
+        // Si no hay ubicación, se usa una predeterminada
         if (!userLocation) {
           userLocation = { lat: 31.8687503, lng: -116.6238947 };
         }
@@ -108,7 +116,7 @@
           center: userLocation
         });
 
-        // Ejemplo de definición de rutas (opcional)
+        // Ejemplo de definición de rutas
         const routes = [
           {
             routeId: "1",
@@ -133,7 +141,7 @@
           }
         ];
 
-        // Verificar si se pasa un parámetro "routeId" en la URL para dibujar una ruta en particular
+        // Verificar si se pasa un parámetro "routeId" en la URL
         const paramRouteId = getParameter("routeId");
         if (paramRouteId) {
           const selectedRoute = routes.find(r => r.routeId === paramRouteId);
@@ -144,7 +152,7 @@
             console.error("No se encontró la ruta con routeId =", paramRouteId);
           }
         } else {
-          // Dibujar todas las rutas (si no se especifica un parámetro)
+          // Dibujar todas las rutas si no se especifica un parámetro
           routes.forEach((route, index) => {
             const color = routeColors[index % routeColors.length];
             drawRoute(route, color);
@@ -158,47 +166,41 @@
         if (minutos >= 60) {
             let horas = Math.floor(minutos / 60);
             let mins = minutos % 60;
-            return mins === 0 ? ${horas} h : ${horas} h ${mins} min;
+            return mins === 0 ? `${horas} h` : `${horas} h ${mins} min`;
         } else {
-            return ${minutos} min;
+            return `${minutos} min`;
         }
       }
-    
-    // Ejemplo de uso:
-    console.log(horario()); // "15 min", "1 h 10 min", "50 min", etc.
-    
 
       // Función para dibujar una ruta en el mapa
       let activeRoutes = [];
+      function drawRoute(routeData, color) {
+          const directionsService = new google.maps.DirectionsService();
+          const directionsRenderer = new google.maps.DirectionsRenderer({
+              polylineOptions: { strokeColor: color, strokeWeight: 5 }
+          });
+          directionsRenderer.setMap(map);
+          activeRoutes.push(directionsRenderer);
 
-function drawRoute(routeData, color) {
-    const directionsService = new google.maps.DirectionsService();
-    const directionsRenderer = new google.maps.DirectionsRenderer({
-        polylineOptions: { strokeColor: color, strokeWeight: 5 }
-    });
-    directionsRenderer.setMap(map);
-    activeRoutes.push(directionsRenderer);
+          const request = {
+              origin: routeData.origin,
+              destination: routeData.destination,
+              waypoints: routeData.waypoints,
+              travelMode: "DRIVING"
+          };
+          directionsService.route(request, (result, status) => {
+              if (status === "OK") {
+                  directionsRenderer.setDirections(result);
+              } else {
+                  console.error("Error al trazar la ruta:", status);
+              }
+          });
+      }
 
-    const request = {
-        origin: routeData.origin,
-        destination: routeData.destination,
-        waypoints: routeData.waypoints,
-        travelMode: "DRIVING"
-    };
-    directionsService.route(request, (result, status) => {
-        if (status === "OK") {
-            directionsRenderer.setDirections(result);
-        } else {
-            console.error("Error al trazar la ruta:", status);
-        }
-    });
-}
-
-function clearRoutes() {
-    activeRoutes.forEach(renderer => renderer.setMap(null));
-    activeRoutes = [];
-}
-
+      function clearRoutes() {
+          activeRoutes.forEach(renderer => renderer.setMap(null));
+          activeRoutes = [];
+      }
 
       // Inicializar el mapa al cargar la página
       window.onload = () => {
@@ -213,11 +215,11 @@ function clearRoutes() {
                 },
                 (error) => {
                     console.warn("No se pudo obtener la ubicación, usando valor por defecto.");
-                    actualizarUbicacion({ lat: 31.8687503, lng: -116.6238947 }); // Ubicación predeterminada
+                    actualizarUbicacion({ lat: 31.8687503, lng: -116.6238947 });
                 },
                 { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 }
             );
-        }        
+        }
       };
     </script>
   </head>
