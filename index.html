@@ -38,7 +38,7 @@
 
       function actualizarUbicacion(pos) {
         const now = Date.now();
-        if (now - lastLocationUpdate > 1000) {  // Actualiza solo si han pasado más de 1 segundo
+        if (now - lastLocationUpdate > 500) {  // Actualiza solo si han pasado más de 1 segundo
           userLocation = pos;
           if (map) {
             if (!userMarker) {
