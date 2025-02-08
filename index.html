@@ -33,10 +33,12 @@
       // Función que será llamada desde App Inventor (usando LocationSensor)
       // con un objeto pos: {lat: <valor>, lng: <valor>}
       // ------------------------------------------------------------------
+      let firstUpdate = true; // Variable para controlar la primera actualización
+
       function actualizarUbicacion(pos) {
-          // Actualizamos el marcador y centramos el mapa, pero no actualizamos la información de la ruta
           if (!userLocation || (userLocation.lat !== pos.lat || userLocation.lng !== pos.lng)) {
               userLocation = pos;
+      
               if (userMarker) {
                   userMarker.setPosition(userLocation);
               } else {
@@ -50,10 +52,15 @@
                       }
                   });
               }
-              
-              // **No llamamos a updateDistanceForCurrentRoute() aquí**
+      
+              // Solo centra el mapa en la primera actualización
+              if (firstUpdate) {
+                  map.setCenter(userLocation);
+                  firstUpdate = false;
+              }
           }
       }
+
 
       // Variable para evitar envíos duplicados
       let lastSentInfo = "";
