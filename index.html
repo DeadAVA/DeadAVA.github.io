@@ -62,6 +62,7 @@
           if (currentRouteData && userLocation) {
               let nearestWaypoint = null;
               let minDistance = Infinity;
+    
               currentRouteData.waypoints.forEach((waypoint) => {
                   const d = calculateDistance(
                       userLocation.lat,
@@ -74,15 +75,22 @@
                       nearestWaypoint = waypoint;
                   }
               });
-      
+    
               if (nearestWaypoint) {
-                  const distanceText = (minDistance <= 1000
-                      ? Math.round(minDistance) + " metros"
-                      : (minDistance / 1000).toFixed(2) + " km");
-                  const proximity = (minDistance <= DISTANCE_THRESHOLD ? "Cercana" : "Lejana");
+                  // Generar una distancia simulada en un rango arbitrario
+                  let simulatedDistance = Math.random() * (5000 - 50) + 50; // Entre 50m y 5km
+                  
+                  // Determinar aleatoriamente si es cercana o lejana
+                  let proximity = Math.random() > 0.5 ? "Cercana" : "Lejana";
+    
+                  // Formatear la distancia para mostrarla
+                  const distanceText = (simulatedDistance <= 1000
+                      ? Math.round(simulatedDistance) + " metros"
+                      : (simulatedDistance / 1000).toFixed(2) + " km");
+                  
                   const estimatedTime = horario();
                   const infoParaEnviar = `Ruta: ${currentRouteData.routeId} | Estado: ${proximity} | Tiempo estimado: ${estimatedTime}`;
-      
+    
                   if (typeof AppInventor !== "undefined" && infoParaEnviar !== lastSentInfo) {
                       AppInventor.setWebViewString(infoParaEnviar);
                       lastSentInfo = infoParaEnviar;
