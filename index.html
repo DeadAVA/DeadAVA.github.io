@@ -38,7 +38,6 @@
       function actualizarUbicacion(pos) {
           if (!userLocation || (userLocation.lat !== pos.lat || userLocation.lng !== pos.lng)) {
               userLocation = pos;
-      
               if (userMarker) {
                   userMarker.setPosition(userLocation);
               } else {
@@ -53,13 +52,11 @@
                   });
               }
       
-              // Solo centra el mapa en la primera actualización
-              if (firstUpdate) {
-                  map.setCenter(userLocation);
-                  firstUpdate = false;
-              }
+              // *** NO CENTRAR EL MAPA AUTOMÁTICAMENTE ***
+              // map.setCenter(userLocation);  ❌ <--- Comentado para permitir desplazamiento libre
           }
       }
+
 
 
       // Variable para evitar envíos duplicados
@@ -209,27 +206,25 @@
       }
 
       // Inicializar el mapa al cargar la página
-      window.onload = () => {
-        initMap();
-        // Seguimos usando watchPosition para actualizar el marcador de ubicación,
-        // pero ya no se actualiza la información de la ruta de forma continua.
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    actualizarUbicacion({
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    });
-                },
-                (error) => {
-                    console.warn("No se pudo obtener la ubicación, usando valor por defecto.");
-                    actualizarUbicacion({ lat: 31.8687503, lng: -116.6238947 });
-                },
-                { enableHighAccuracy: true, timeout: 10000 }
-            );
-        }
+        window.onload = () => {
+            initMap();
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        actualizarUbicacion({
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        });
+                    },
+                    (error) => {
+                        console.warn("No se pudo obtener la ubicación, usando valor por defecto.");
+                        actualizarUbicacion({ lat: 31.8687503, lng: -116.6238947 });
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            }
+        };
 
-      };
 
       // Aseguramos que initMap esté disponible globalmente (para el callback de Google Maps)
       window.initMap = initMap;
