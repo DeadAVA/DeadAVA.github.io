@@ -88,12 +88,9 @@
             const estimatedTime = horario();
             // Enviar datos a App Inventor (si está definido)
             const infoParaEnviar = `Ruta: ${currentRouteData.routeId} | Estado: ${proximity} | Tiempo estimado: ${estimatedTime}`;
-            if (typeof AppInventor !== "undefined") {
-              AppInventor.setWebViewString(infoParaEnviar);
-            } else {
-                console.log("AppInventor no está definido.");
-                console.log("Principal:", infoParaEnviar);
-              //  console.log("Tiempo estimado:", estimatedTime);
+            if (typeof AppInventor !== "undefined" && infoParaEnviar !== lastSentInfo) {
+                AppInventor.setWebViewString(infoParaEnviar);
+                lastSentInfo = infoParaEnviar;
             }
           }
         }
