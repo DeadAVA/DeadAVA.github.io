@@ -7,8 +7,6 @@
       let userLocation; // Se actualizará con la ubicación actual
       let userMarker;   // Marcador para la ubicación del usuario
       let currentRouteData = null;
-      // Nota: La constante DISTANCE_THRESHOLD ya no se usa, pero se mantiene para referencia.
-      const DISTANCE_THRESHOLD = 500; // Umbral de distancia en metros
       const routeColors = ["#FF0000", "#00FF00", "#0000FF", "#FF00FF", "#00FFFF"];
 
       // Función para obtener parámetros de la URL (si se desea usar rutas específicas)
@@ -35,9 +33,8 @@
       // Función que será llamada desde App Inventor (usando LocationSensor)
       // con un objeto pos: {lat: <valor>, lng: <valor>}
       // ------------------------------------------------------------------
-      let lastLocationUpdate = Date.now();
-
       function actualizarUbicacion(pos) {
+          // Actualizamos el marcador y centramos el mapa, pero no actualizamos la información de la ruta
           if (!userLocation || (userLocation.lat !== pos.lat || userLocation.lng !== pos.lng)) {
               userLocation = pos;
               if (userMarker) {
@@ -54,14 +51,14 @@
                   });
               }
               map.setCenter(userLocation);
-              updateDistanceForCurrentRoute();
+              // **No llamamos a updateDistanceForCurrentRoute() aquí**
           }
       }
 
       // Variable para evitar envíos duplicados
       let lastSentInfo = "";
 
-      // Función para recalcular la distancia al waypoint más cercano y enviar la información a App Inventor
+      // Función para recalcular (y enviar) la información de la ruta a App Inventor
       function updateDistanceForCurrentRoute() {
           if (currentRouteData && userLocation) {
               let nearestWaypoint = null;
@@ -80,7 +77,7 @@
               });
       
               if (nearestWaypoint) {
-                  // Se mantiene el cálculo de la distancia real para mostrarla (opcional)
+                  // Se mantiene el cálculo de la distancia real (para mostrarlo, si lo deseas)
                   const distanceText = (minDistance <= 1000
                       ? Math.round(minDistance) + " metros"
                       : (minDistance / 1000).toFixed(2) + " km");
@@ -106,7 +103,7 @@
           console.error("No se encontró el div con ID 'map'");
           return;
         }
-        // Si aún no se tiene una ubicación, se usa una por defecto
+        // Si no se tiene una ubicación, se usa una por defecto
         if (!userLocation) {
           userLocation = { lat: 31.8687503, lng: -116.6238947 };
         }
@@ -151,12 +148,15 @@
             console.error("No se encontró la ruta con routeId =", paramRouteId);
           }
         } else {
-          // Dibujar todas las rutas (si no se especifica un parámetro)
+          // Si no se especifica un parámetro, asignamos la primera ruta para tener una de referencia
+          currentRouteData = routes[0];
           routes.forEach((route, index) => {
             const color = routeColors[index % routeColors.length];
             drawRoute(route, color);
           });
         }
+        // Actualizamos la información de la ruta **una sola vez** al cargar la ruta
+        updateDistanceForCurrentRoute();
       }
 
       // Función para generar un tiempo estimado aleatorio en múltiplos de 5 minutos
@@ -204,6 +204,8 @@
       // Inicializar el mapa al cargar la página
       window.onload = () => {
         initMap();
+        // Seguimos usando watchPosition para actualizar el marcador de ubicación,
+        // pero ya no se actualiza la información de la ruta de forma continua.
         if (navigator.geolocation) {
             navigator.geolocation.watchPosition(
                 (position) => {
@@ -220,6 +222,9 @@
             );
         }
       };
+
+      // Aseguramos que initMap esté disponible globalmente (para el callback de Google Maps)
+      window.initMap = initMap;
     </script>
   </head>
   <body>
