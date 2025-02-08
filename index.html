@@ -33,6 +33,7 @@
       // Función que será llamada desde App Inventor (usando LocationSensor)
       // con un objeto pos: {lat: <valor>, lng: <valor>}
       // ------------------------------------------------------------------
+      let firstUpdate = true; // Variable para controlar la primera actualización
 
       // Variable para evitar envíos duplicados
       let lastSentInfo = "";
@@ -61,12 +62,10 @@
                       ? Math.round(minDistance) + " metros"
                       : (minDistance / 1000).toFixed(2) + " km");
                   
-
                   // Aquí se decide aleatoriamente si es "Cercana" o "Lejana"
                   const proximity = Math.random() > 0.5 ? "Cercana" : "Lejana";
                   const estimatedTime = horario();
                   
-
                   // Se arma el mensaje a enviar (puedes incluir distanceText si lo deseas)
                   const infoParaEnviar = `Ruta: ${currentRouteData.routeId} | Estado: ${proximity} | Tiempo estimado: ${estimatedTime}`;
       
@@ -78,7 +77,6 @@
           }
       }
 
-      // Función para inicializar el mapa
       function initMap() {
         const mapDiv = document.getElementById("map");
         if (!mapDiv) {
@@ -182,6 +180,13 @@
           activeRoutes.forEach(renderer => renderer.setMap(null));
           activeRoutes = [];
       }
+
+      // Inicializar el mapa al cargar la página
+        window.onload = () => {
+            initMap();
+          
+        };
+
 
       // Aseguramos que initMap esté disponible globalmente (para el callback de Google Maps)
       window.initMap = initMap;
